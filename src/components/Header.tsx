@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowTrendingUpIcon } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 const Header = () => {
   return (
@@ -8,7 +8,7 @@ const Header = () => {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-2 rounded-lg shadow-md">
-            <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
+            <TrendingUp className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-700 to-purple-500 bg-clip-text text-transparent">CEAI Analytics</h1>
