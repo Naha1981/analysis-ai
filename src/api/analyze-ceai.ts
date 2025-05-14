@@ -51,10 +51,11 @@ export default async function handler(req: Request, res: Response) {
    - Return a well-formatted text document with clear headings, subheadings and bullet points.
    - Include sections for:
      - Overall dimension averages across all responses
-     - Reliability analysis with Cronbach's alpha values
+     - Reliability analysis with Cronbach's alpha values and interpretations
      - Department breakdowns (if applicable)
      - Any data validation issues or errors found
-   - Provide insights on the results and highlight any notable patterns`,
+   - Provide insights on the results and highlight any notable patterns or areas of concern.
+   - Make sure the formatting is clean with proper spacing and organization for readability.`,
         }
       ],
     };
