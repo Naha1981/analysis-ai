@@ -7,7 +7,9 @@ import FileUploader from '@/components/FileUploader';
 import AnalysisSection from '@/components/AnalysisSection';
 import EmptyState from '@/components/EmptyState';
 import { processData, DimensionScore, DepartmentScore } from '@/utils/ceai-analysis';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { toast } = useToast();
@@ -95,6 +97,18 @@ const Index = () => {
             <EmptyState onUpload={handleUploadClick} />
           ) : (
             <>
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Analysis Results</h2>
+                <div className="flex gap-2">
+                  <Link to="/ai-analysis">
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      AI Analysis
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              
               <div className="animate-enter">
                 <FileUploader onFileSelected={handleFileSelected} />
               </div>

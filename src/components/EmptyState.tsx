@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { ChartBarIcon } from 'lucide-react';
+import { ChartBarIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface EmptyStateProps {
   onUpload: () => void;
@@ -35,6 +36,21 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onUpload }) => {
             <h3 className="font-medium mb-1">48 Questions</h3>
             <p className="text-xs text-muted-foreground">Comprehensive analysis with Cronbach's Alpha reliability metrics</p>
           </div>
+        </div>
+        
+        <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="h-5 w-5 text-purple-600" />
+            <h3 className="font-medium">New! AI-Powered Analysis</h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Try our new Gemini AI integration for advanced insights and detailed reports
+          </p>
+          <Link to="/ai-analysis">
+            <Button variant="outline" size="sm" className="w-full">
+              Try AI Analysis
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

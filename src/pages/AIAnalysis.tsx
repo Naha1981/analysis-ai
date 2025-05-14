@@ -1,0 +1,180 @@
+
+import React, { useState, useRef } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import Papa from 'papaparse';
+import Header from '@/components/Header';
+import FileUploader from '@/components/FileUploader';
+import { Loader2, FileText } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const AIAnalysis = () => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<string>('');
+  const [csvContent, setCsvContent] = useState<string>('');
+  const [fileName, setFileName] = useState<string>('');
+
+  const handleFileSelected = async (file: File) => {
+    setFileName(file.name);
+    setIsLoading(true);
+    setAnalysis('');
+    
+    try {
+      // Read the file content
+      const text = await file.text();
+      setCsvContent(text);
+      
+      toast({
+        title: "File loaded successfully",
+        description: `${file.name} is ready for AI analysis`
+      });
+    } catch (error) {
+      console.error("Error reading file:", error);
+      toast({
+        variant: "destructive",
+        title: "Error reading file",
+        description: "Could not read the file content"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const analyzeWithGemini = async () => {
+    if (!csvContent) {
+      toast({
+        variant: "destructive",
+        title: "No data to analyze",
+        description: "Please upload a CSV file first"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setAnalysis('');
+
+    try {
+      const response = await fetch('/api/analyze-ceai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ csvContent }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+
+      let accumulatedText = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        // Convert Uint8Array to string
+        const chunk = new TextDecoder().decode(value);
+        accumulatedText += chunk;
+        setAnalysis(accumulatedText);
+      }
+      
+      toast({
+        title: "Analysis complete",
+        description: "AI analysis has been generated successfully"
+      });
+    } catch (error) {
+      console.error("Error analyzing data:", error);
+      toast({
+        variant: "destructive",
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen pb-12">
+      <Header />
+      
+      <main className="container mx-auto px-4">
+        <div className="grid gap-6 animate-enter">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">AI-Powered CEAI Analysis</h2>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Survey Data</CardTitle>
+                <CardDescription>Upload your CEAI CSV file for advanced AI analysis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FileUploader onFileSelected={handleFileSelected} />
+                
+                {fileName && (
+                  <div className="mt-4 flex items-center space-x-2 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span>{fileName}</span>
+                  </div>
+                )}
+                
+                <div className="mt-6">
+                  <Button 
+                    onClick={analyzeWithGemini} 
+                    className="w-full"
+                    disabled={!csvContent || isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      'Analyze with Gemini AI'
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-purple-50">
+                <CardTitle>AI Analysis Results</CardTitle>
+                <CardDescription>Generated by Google's Gemini 2.0 Flash model</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoading && !analysis ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 text-purple-600 animate-spin mb-4" />
+                    <p className="text-muted-foreground">Processing with AI...</p>
+                  </div>
+                ) : analysis ? (
+                  <div className="p-6 prose max-w-none">
+                    <div className="whitespace-pre-wrap font-sans">{analysis}</div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-12 text-center">
+                    <p className="text-muted-foreground mb-2">Upload a CSV file and click "Analyze with Gemini AI" to generate insights</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default AIAnalysis;
