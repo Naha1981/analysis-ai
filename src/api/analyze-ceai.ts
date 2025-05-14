@@ -80,7 +80,9 @@ export default async function handler(req: Request, res: Response) {
 
     // Stream the response
     for await (const chunk of response) {
-      res.write(chunk.text || '');
+      // Remove any HTML tags from the response
+      const cleanedText = chunk.text ? chunk.text.replace(/<\/?[^>]+(>|$)/g, '') : '';
+      res.write(cleanedText);
     }
     
     res.end();
