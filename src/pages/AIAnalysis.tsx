@@ -160,7 +160,7 @@ const AIAnalysis = () => {
                     <p className="text-muted-foreground">Processing with AI...</p>
                   </div>
                 ) : analysis ? (
-                  <div className="p-6 prose max-w-none">
+                  <div className="p-6 prose prose-stone max-w-none overflow-auto max-h-[70vh]">
                     <div className="whitespace-pre-wrap font-sans">{analysis}</div>
                   </div>
                 ) : (
