@@ -25,10 +25,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           
-          <div className="bg-white rounded-lg p-4 border border-muted shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="font-medium mb-1">48 Questions</h3>
-            <p className="text-xs text-muted-foreground">Comprehensive analysis with Cronbach's Alpha reliability metrics</p>
-          </div>
+          
         </div>
         
         <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
