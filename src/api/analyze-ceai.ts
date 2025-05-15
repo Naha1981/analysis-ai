@@ -24,7 +24,7 @@ export default async function handler(req: Request, res: Response) {
       responseMimeType: 'text/plain',
       systemInstruction: [
         {
-          text: `You are an advanced data analysis assistant powered by the Gemini 1.5 Pro model, designed to analyze Corporate Entrepreneurship Assessment Instrument (CEAI) survey data. Your task is to process a CSV file containing CEAI survey responses, compute custom scores for five dimensions, perform reliability analysis, and generate structured output for dashboards. Follow these instructions:
+          text: `You are an advanced data analysis assistant powered by the Gemini 1.5 Pro model, designed to analyze Corporate Entrepreneurship Assessment Instrument (CEAI) survey data. Your task is to process a CSV file containing CEAI survey responses, compute custom scores for five dimensions, perform reliability analysis, and generate structured output. Follow these instructions:
 
 1. **Input Data**:
    - Accept a CSV file with 56 columns: \`timestamp\`, \`department\` (optional), \`Answer1\` to \`Answer48\` (Likert scale 1-5), and pre-calculated averages (\`Management_Support_Avg\`, \`Autonomy_Avg\`, \`Rewards_Avg\`, \`Time_Availability_Avg\`, \`Organizational_Boundaries_Avg\`).
@@ -55,7 +55,8 @@ export default async function handler(req: Request, res: Response) {
      - Department breakdowns (if applicable)
      - Any data validation issues or errors found
    - Provide insights on the results and highlight any notable patterns or areas of concern.
-   - Make sure the formatting is clean with proper spacing and organization for readability.`,
+   - Make sure the formatting is clean with proper spacing and organization for readability.
+   - DO NOT return HTML tags, meta tags, or JSON format in your output. Keep it as clean, plain text only.`,
         }
       ],
     };
