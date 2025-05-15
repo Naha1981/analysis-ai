@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Papa from 'papaparse';
@@ -86,10 +87,10 @@ const AIAnalysis = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12">
+    <div className="min-h-screen pb-12 flex flex-col">
       <Header />
       
-      <main className="container mx-auto px-4">
+      <main className="container mx-auto px-4 flex-grow">
         <div className="grid gap-6 animate-enter">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">AI-Powered CEAI Analysis</h2>
@@ -158,6 +159,10 @@ const AIAnalysis = () => {
           </div>
         </div>
       </main>
+      
+      <footer className="mt-auto py-4 border-t border-gray-200 text-center">
+        <p className="text-sm text-gray-500">Built By: Thabiso</p>
+      </footer>
     </div>
   );
 };
