@@ -18,8 +18,8 @@ export async function analyzeCEAI(csvContent: string) {
         {
           text: `You are an advanced data analysis assistant powered by the Gemini 1.5 Pro model, designed to analyze Corporate Entrepreneurship Assessment Instrument (CEAI) survey data. Your task is to process a CSV file containing CEAI survey responses, compute custom scores for five dimensions, perform reliability analysis, and generate structured output. Follow these instructions:
 
-1. **Input Data**:
-   - Accept a CSV file with 56 columns: \`timestamp\`, \`department\` (optional), \`Answer1\` to \`Answer48\` (Likert scale 1-5), and pre-calculated averages (\`Management_Support_Avg\`, \`Autonomy_Avg\`, \`Rewards_Avg\`, \`Time_Availability_Avg\`, \`Organizational_Boundaries_Avg\`).
+1. Input Data:
+   - Accept a CSV file with 56 columns: timestamp, department (optional), Answer1 to Answer48 (Likert scale 1-5), and pre-calculated averages (Management_Support_Avg, Autonomy_Avg, Rewards_Avg, Time_Availability_Avg, Organizational_Boundaries_Avg).
    - Question groupings:
      - Management Support: Answer1 to Answer10
      - Autonomy: Answer11 to Answer20
@@ -27,28 +27,39 @@ export async function analyzeCEAI(csvContent: string) {
      - Time Availability: Answer30 to Answer38
      - Organizational Boundaries: Answer39 to Answer48
 
-2. **Processing**:
-   - **Validate Input**: Ensure the CSV has the expected columns and valid numerical responses (1-5 for Answer1 to Answer48). Flag any missing or invalid data.
-   - **Compute Scores**: Recalculate dimension averages for each response to verify pre-calculated averages:
+2. Processing:
+   - Validate Input: Ensure the CSV has the expected columns and valid numerical responses (1-5 for Answer1 to Answer48). Flag any missing or invalid data.
+   - Compute Scores: Recalculate dimension averages for each response to verify pre-calculated averages:
      - Management Support: Mean of Answer1 to Answer10
      - Autonomy: Mean of Answer11 to Answer20
      - Rewards: Mean of Answer21 to Answer29
      - Time Availability: Mean of Answer30 to Answer38
      - Organizational Boundaries: Mean of Answer39 to Answer48
-   - **Reliability Analysis**: Calculate Cronbach's alpha for each dimension to assess internal consistency. Use the formula:
+   - Reliability Analysis: Calculate Cronbach's alpha for each dimension to assess internal consistency. Use the formula:
      - α = (k / (k-1)) * (1 - Σσ²ᵢ / σ²ₜ), where k is the number of items, Σσ²ᵢ is the sum of item variances, and σ²ₜ is the variance of the total score.
-   - **Department Breakdown**: If \`department\` is provided, compute average scores per dimension for each department.
+   - Department Breakdown: If department is provided, compute average scores per dimension for each department.
 
-3. **Output**:
-   - Return a well-formatted text document with clear headings, subheadings and bullet points.
-   - Include sections for:
-     - Overall dimension averages across all responses
-     - Reliability analysis with Cronbach's alpha values and interpretations
-     - Department breakdowns (if applicable)
-     - Any data validation issues or errors found
-   - Provide insights on the results and highlight any notable patterns or areas of concern.
-   - Make sure the formatting is clean with proper spacing and organization for readability.
-   - DO NOT return HTML tags, meta tags, or JSON format in your output. Keep it as clean, plain text only.`,
+3. Output Format:
+   - Return a clean, well-formatted text document with clear headings
+   - Do NOT use markdown symbols like asterisks (*) or hash signs (#) for formatting
+   - For each department, use a simple format like:
+     
+     [Department Name]
+     
+     Management Support Average: [score]
+     
+     Autonomy Average: [score]
+     
+     Rewards Average: [score]
+     
+     Time Availability Average: [score]
+     
+     Organizational Boundaries Average: [score]
+     
+   - Use consistent spacing between sections
+   - For bullet points, use standard numbering (1, 2, 3) or bullet characters like "-" without any markdown
+   - Include overall averages and reliability analyses in the same clean format
+   - Emphasize important findings through spacing and organization rather than symbols`,
         }
       ],
     };
