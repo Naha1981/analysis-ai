@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Papa from 'papaparse';
@@ -8,6 +7,7 @@ import { Loader2, FileText } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { analyzeCEAI } from '@/api/analyze-ceai';
 
 const AIAnalysis = () => {
   const { toast } = useToast();
@@ -56,31 +56,16 @@ const AIAnalysis = () => {
     setAnalysis('');
 
     try {
-      const response = await fetch('/api/analyze-ceai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ csvContent }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Response body is not readable");
+      const response = await analyzeCEAI(csvContent);
+      
+      if (!response) {
+        throw new Error("Failed to get response from AI");
       }
 
       let accumulatedText = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        // Convert Uint8Array to string
-        const chunk = new TextDecoder().decode(value);
-        accumulatedText += chunk;
+      for await (const chunk of response) {
+        const chunkText = chunk.text || '';
+        accumulatedText += chunkText;
         setAnalysis(accumulatedText);
       }
       

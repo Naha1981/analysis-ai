@@ -1,19 +1,11 @@
 
-import { Request, Response } from "express";
 import { GoogleGenAI } from '@google/genai';
 
 // API handler for CEAI analysis with Gemini
-export default async function handler(req: Request, res: Response) {
-  // Set headers for streaming response
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  
+export async function analyzeCEAI(csvContent: string) {
   try {
-    const { csvContent } = req.body;
-    
     if (!csvContent) {
-      return res.status(400).json({ error: 'CSV content is required' });
+      throw new Error('CSV content is required');
     }
     
     const ai = new GoogleGenAI({
@@ -79,28 +71,11 @@ export default async function handler(req: Request, res: Response) {
       contents,
     });
 
-    // Stream the response
-    for await (const chunk of response) {
-      // Remove any HTML tags from the response
-      const cleanedText = chunk.text ? chunk.text.replace(/<\/?[^>]+(>|$)/g, '') : '';
-      res.write(cleanedText);
-    }
-    
-    res.end();
+    // Return response as async iterator
+    return response;
     
   } catch (error) {
     console.error('Error analyzing data with Gemini:', error);
-    
-    // If headers weren't sent yet, return error as JSON
-    if (!res.headersSent) {
-      return res.status(500).json({ 
-        error: 'Failed to analyze data with Gemini AI',
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    
-    // If we were already streaming, end with error message
-    res.write(`\n\nError occurred during analysis: ${error instanceof Error ? error.message : String(error)}`);
-    res.end();
+    throw error;
   }
 }
