@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, FileCheck2, AlertCircle, FileSpreadsheet } from 'lucide-react';
@@ -12,26 +11,12 @@ interface ExcelProcessorProps {
   onDataProcessed: (results: any) => void;
 }
 
-// Add static method for handling files outside the component
-const handleFileStatic = (file: File, callback: (results: any) => void) => {
-  // Check if file is Excel or CSV
-  if (!file.name.endsWith('.xlsx') && 
-      !file.name.endsWith('.xls') && 
-      !file.name.endsWith('.csv')) {
-    console.error("Invalid file type");
-    return;
-  }
-  
-  // Process CSV file
-  if (file.name.endsWith('.csv')) {
-    processCSVFileStatic(file, callback);
-    return;
-  }
-  
-  // Process Excel file
-  processExcelFileStatic(file, callback);
-};
+// Define a module augmentation to add static methods to the component
+interface ExcelProcessorComponent extends React.FC<ExcelProcessorProps> {
+  handleFile: (file: File, callback: (results: any) => void) => void;
+}
 
+// Helper functions for static method
 const processCSVFileStatic = async (file: File, callback: (results: any) => void) => {
   try {
     const text = await file.text();
@@ -97,6 +82,26 @@ const readExcelFileStatic = (file: File): Promise<string> => {
     
     reader.readAsBinaryString(file);
   });
+};
+
+// Static method to handle file processing
+const handleFileStatic = (file: File, callback: (results: any) => void) => {
+  // Check if file is Excel or CSV
+  if (!file.name.endsWith('.xlsx') && 
+      !file.name.endsWith('.xls') && 
+      !file.name.endsWith('.csv')) {
+    console.error("Invalid file type");
+    return;
+  }
+  
+  // Process CSV file
+  if (file.name.endsWith('.csv')) {
+    processCSVFileStatic(file, callback);
+    return;
+  }
+  
+  // Process Excel file
+  processExcelFileStatic(file, callback);
 };
 
 const ExcelProcessor: React.FC<ExcelProcessorProps> = ({ onDataProcessed }) => {
@@ -328,7 +333,8 @@ const ExcelProcessor: React.FC<ExcelProcessorProps> = ({ onDataProcessed }) => {
   );
 };
 
-// Export static method
-ExcelProcessor.handleFile = handleFileStatic;
+// Cast the component to our extended interface type and add the static method
+const ExcelProcessorWithStatic = ExcelProcessor as ExcelProcessorComponent;
+ExcelProcessorWithStatic.handleFile = handleFileStatic;
 
-export default ExcelProcessor;
+export default ExcelProcessorWithStatic;
