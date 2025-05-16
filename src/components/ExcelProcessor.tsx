@@ -12,6 +12,93 @@ interface ExcelProcessorProps {
   onDataProcessed: (results: any) => void;
 }
 
+// Add static method for handling files outside the component
+const handleFileStatic = (file: File, callback: (results: any) => void) => {
+  // Check if file is Excel or CSV
+  if (!file.name.endsWith('.xlsx') && 
+      !file.name.endsWith('.xls') && 
+      !file.name.endsWith('.csv')) {
+    console.error("Invalid file type");
+    return;
+  }
+  
+  // Process CSV file
+  if (file.name.endsWith('.csv')) {
+    processCSVFileStatic(file, callback);
+    return;
+  }
+  
+  // Process Excel file
+  processExcelFileStatic(file, callback);
+};
+
+const processCSVFileStatic = async (file: File, callback: (results: any) => void) => {
+  try {
+    const text = await file.text();
+    
+    // Process the data
+    const results = analyzeCEAIData(text);
+    callback(results);
+  } catch (error) {
+    console.error("Error processing CSV file:", error);
+  }
+};
+
+const processExcelFileStatic = async (file: File, callback: (results: any) => void) => {
+  try {
+    const data = await readExcelFileStatic(file);
+    
+    // Process the data
+    const results = analyzeCEAIData(data);
+    callback(results);
+  } catch (error) {
+    console.error("Error processing Excel file:", error);
+  }
+};
+
+const readExcelFileStatic = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        if (!data) {
+          reject(new Error("Failed to read file data"));
+          return;
+        }
+        
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // If first row has column headers
+        const headers = jsonData[0] as string[];
+        const rows = jsonData.slice(1) as any[][];
+        
+        // Create CSV data with headers
+        const csvData = Papa.unparse({
+          fields: headers,
+          data: rows
+        });
+        
+        resolve(csvData);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    reader.onerror = () => {
+      reject(new Error("Error reading file"));
+    };
+    
+    reader.readAsBinaryString(file);
+  });
+};
+
 const ExcelProcessor: React.FC<ExcelProcessorProps> = ({ onDataProcessed }) => {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
@@ -240,5 +327,8 @@ const ExcelProcessor: React.FC<ExcelProcessorProps> = ({ onDataProcessed }) => {
     </Card>
   );
 };
+
+// Export static method
+ExcelProcessor.handleFile = handleFileStatic;
 
 export default ExcelProcessor;

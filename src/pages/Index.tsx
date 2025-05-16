@@ -81,8 +81,8 @@ const Index = () => {
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            const processor = new ExcelProcessor({ onDataProcessed: handleDataProcessed });
-            processor.handleFile(e.target.files[0]);
+            // Use the static handleFile method from the ExcelProcessor component
+            ExcelProcessor.handleFile(e.target.files[0], handleDataProcessed);
           }
         }}
       />
