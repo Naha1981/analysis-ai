@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEAI Analysis Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-4 text-white min-vh-100">
+                    <h2 class="fs-4 d-flex align-items-center mb-4">
+                        <i class="bi bi-bar-chart-line me-2"></i>
+                        <span>CEAI Analysis</span>
+                    </h2>
+                    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start w-100" id="menu">
+                        <li class="nav-item w-100">
+                            <a href="#" class="nav-link active px-0 align-middle">
+                                <i class="bi bi-house"></i> <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="#" class="nav-link px-0 align-middle">
+                                <i class="bi bi-upload"></i> <span class="ms-1 d-none d-sm-inline">Upload Data</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="#" class="nav-link px-0 align-middle">
+                                <i class="bi bi-file-earmark-text"></i> <span class="ms-1 d-none d-sm-inline">Reports</span>
+                            </a>
+                        </li>
+                        <li class="nav-item w-100">
+                            <a href="#" class="nav-link px-0 align-middle">
+                                <i class="bi bi-gear"></i> <span class="ms-1 d-none d-sm-inline">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="container py-4">
+                    <h1 class="mb-4">CEAI Analysis Dashboard</h1>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Upload CEAI Survey Data</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="csvFile" class="form-label">Select CSV File</label>
+                                        <input class="form-control" type="file" id="csvFile" accept=".csv">
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <button id="uploadBtn" class="btn btn-primary">Process Data</button>
+                                        <button id="sampleDataBtn" class="btn btn-outline-secondary">Load Sample Data</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="resultsSection" class="d-none">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Analysis Results</h5>
+                                        <div>
+                                            <button id="exportBtn" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-download me-1"></i>Export
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">Summary</button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="dimensions-tab" data-bs-toggle="tab" data-bs-target="#dimensions" type="button" role="tab">Dimensions</button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab">Raw Data</button>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content p-3" id="resultTabsContent">
+                                            <!-- Summary Tab -->
+                                            <div class="tab-pane fade show active" id="summary" role="tabpanel">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="card mb-4">
+                                                            <div class="card-header">
+                                                                <h6 class="card-title mb-0">Average Scores</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div id="averageScores"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="card mb-4">
+                                                            <div class="card-header">
+                                                                <h6 class="card-title mb-0">Strengths & Weaknesses</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div id="strengthsWeaknesses"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h6 class="card-title mb-0">Interpretation</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div id="interpretation">
+                                                                    <p>The organization demonstrates strong autonomy and moderate support for entrepreneurship. Work Discretion (Autonomy) stands out with an average score of 4.2, indicating employees feel empowered to make decisions. Areas such as Management Support and Rewards/Reinforcement show potential for improvement through clearer leadership engagement and incentive alignment. There are no weak dimensions, suggesting a generally supportive environment for innovation.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Dimensions Tab -->
+                                            <div class="tab-pane fade" id="dimensions" role="tabpanel">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="card mb-4">
+                                                            <div class="card-header">
+                                                                <h6 class="card-title mb-0">Dimension Scores Per Respondent</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-striped" id="dimensionScoresTable">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Respondent</th>
+                                                                                <th>Management Support</th>
+                                                                                <th>Work Discretion</th>
+                                                                                <th>Rewards/Reinforcement</th>
+                                                                                <th>Time Availability</th>
+                                                                                <th>Organizational Boundaries</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody></tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="card">
+                                                            <div class="card-header">
+                                                                <h6 class="card-title mb-0">Descriptive Statistics</h6>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-striped" id="statisticsTable">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Dimension</th>
+                                                                                <th>Mean</th>
+                                                                                <th>Median</th>
+                                                                                <th>Std. Deviation</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody></tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Raw Data Tab -->
+                                            <div class="tab-pane fade" id="data" role="tabpanel">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="card-title mb-0">Cleaned & Encoded Data</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-striped" id="cleanedDataTable">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Respondent</th>
+                                                                        <!-- Question headers will be added dynamically -->
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody></tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample CSV Modal -->
+    <div class="modal fade" id="sampleCsvModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sample CSV Format</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Your CSV file should have the following format:</p>
+                    <pre class="bg-light p-3">Q1,Q2,Q3,...,Q48
+Strongly Agree,Agree,Not Sure,...
+Agree,Disagree,Strongly Agree,...</pre>
+                    <p>Each row represents one respondent's answers to all 48 CEAI questions using the Likert scale:</p>
+                    <ul>
+                        <li>Strongly Disagree (1)</li>
+                        <li>Disagree (2)</li>
+                        <li>Not Sure (3)</li>
+                        <li>Agree (4)</li>
+                        <li>Strongly Agree (5)</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="ceaiProcessor.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
