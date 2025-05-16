@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChartBarIcon, Sparkles, UploadCloud, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,10 +26,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Link to="/analysis" className="w-full">
-            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-              <PieChart className="h-8 w-8 text-purple-600" />
-              <span>Standard Analysis</span>
-            </Button>
+            
           </Link>
           
           <Link to="/ai-analysis" className="w-full">
