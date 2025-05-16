@@ -1,12 +1,11 @@
 
 import React, { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import Papa from 'papaparse';
 import Header from '@/components/Header';
-import FileUploader from '@/components/FileUploader';
 import AnalysisSection from '@/components/AnalysisSection';
 import EmptyState from '@/components/EmptyState';
-import { processData, DimensionScore, DepartmentScore } from '@/utils/ceai-analysis';
+import ExcelProcessor from '@/components/ExcelProcessor';
+import { DimensionScore, DepartmentScore } from '@/utils/ceai-analysis';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,73 +17,17 @@ const Index = () => {
   const [hasData, setHasData] = useState(false);
   const [dimensionScores, setDimensionScores] = useState<DimensionScore[]>([]);
   const [departmentScores, setDepartmentScores] = useState<DepartmentScore[]>([]);
-
-  const handleFileSelected = (file: File) => {
-    setIsLoading(true);
-    
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          // Validate the CSV structure
-          const firstRow = results.data[0] as Record<string, string>;
-          const missingColumns = [];
-          
-          // Check if required columns exist
-          for (let i = 1; i <= 48; i++) {
-            const columnName = `Answer${i}`;
-            if (!firstRow.hasOwnProperty(columnName)) {
-              missingColumns.push(columnName);
-            }
-          }
-          
-          if (missingColumns.length > 0) {
-            toast({
-              variant: "destructive",
-              title: "Invalid CSV format",
-              description: `Missing required columns: ${missingColumns.slice(0, 3).join(', ')}${missingColumns.length > 3 ? '...' : ''}`
-            });
-            setIsLoading(false);
-            return;
-          }
-          
-          // Process the data
-          const { dimensionScores, departmentScores } = processData(results.data as Record<string, string>[]);
-          
-          setDimensionScores(dimensionScores);
-          setDepartmentScores(departmentScores);
-          setHasData(true);
-          
-          toast({
-            title: "Analysis complete",
-            description: `Analyzed ${results.data.length} survey responses`
-          });
-        } catch (error) {
-          console.error("Error processing data:", error);
-          toast({
-            variant: "destructive",
-            title: "Analysis failed",
-            description: "An error occurred while processing the data"
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      error: (error) => {
-        console.error("CSV parsing error:", error);
-        toast({
-          variant: "destructive",
-          title: "Parsing failed",
-          description: "Failed to parse the CSV file"
-        });
-        setIsLoading(false);
-      }
-    });
-  };
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDataProcessed = (results: any) => {
+    setAnalysisResult(results);
+    setDimensionScores(results.dimensionScoresArray);
+    setDepartmentScores(results.departmentScores);
+    setHasData(true);
   };
 
   return (
@@ -110,7 +53,7 @@ const Index = () => {
               </div>
               
               <div className="animate-enter">
-                <FileUploader onFileSelected={handleFileSelected} />
+                <ExcelProcessor onDataProcessed={handleDataProcessed} />
               </div>
               
               {isLoading ? (
@@ -122,6 +65,7 @@ const Index = () => {
                 <AnalysisSection 
                   dimensionScores={dimensionScores}
                   departmentScores={departmentScores}
+                  analysisResult={analysisResult}
                   isLoading={isLoading}
                 />
               )}
@@ -133,11 +77,12 @@ const Index = () => {
       <input 
         ref={fileInputRef}
         type="file"
-        accept=".csv"
+        accept=".xlsx,.xls,.csv"
         className="hidden"
         onChange={(e) => {
           if (e.target.files && e.target.files.length > 0) {
-            handleFileSelected(e.target.files[0]);
+            const processor = new ExcelProcessor({ onDataProcessed: handleDataProcessed });
+            processor.handleFile(e.target.files[0]);
           }
         }}
       />

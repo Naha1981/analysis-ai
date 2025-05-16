@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LineChart, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line, ResponsiveContainer, Bar } from 'recharts';
+import { LineChart, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Line, ResponsiveContainer, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Scatter } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,10 +20,18 @@ interface DepartmentScore {
 interface AnalysisSectionProps {
   dimensionScores: DimensionScore[];
   departmentScores: DepartmentScore[];
+  analysisResult?: any;
   isLoading: boolean;
 }
 
-const AnalysisSection: React.FC<AnalysisSectionProps> = ({ dimensionScores, departmentScores, isLoading }) => {
+const AnalysisSection: React.FC<AnalysisSectionProps> = ({ dimensionScores, departmentScores, analysisResult, isLoading }) => {
+  // Format data for the radar chart
+  const radarData = dimensionScores.map(dim => ({
+    dimension: dim.name,
+    score: dim.score,
+    fullMark: 5
+  }));
+
   return (
     <div className="space-y-6 animate-enter">
       <Tabs defaultValue="overview" className="w-full">
@@ -33,6 +41,8 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({ dimensionScores, depa
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="reliability">Reliability</TabsTrigger>
+            <TabsTrigger value="radar">Radar</TabsTrigger>
+            <TabsTrigger value="statistics">Statistics</TabsTrigger>
           </TabsList>
         </div>
 
@@ -161,6 +171,114 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({ dimensionScores, depa
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="radar" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dimension Profile</CardTitle>
+              <CardDescription>Radar chart showing dimension scores</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              {isLoading ? (
+                <Skeleton className="h-[350px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <RadarChart outerRadius={90} data={radarData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="dimension" />
+                    <PolarRadiusAxis angle={90} domain={[0, 5]} />
+                    <Radar
+                      name="Score"
+                      dataKey="score"
+                      stroke="#8B5CF6"
+                      fill="#8B5CF6"
+                      fillOpacity={0.6}
+                    />
+                    <Legend />
+                  </RadarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="statistics" className="space-y-6">
+          {analysisResult && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Descriptive Statistics</CardTitle>
+                <CardDescription>Statistical summary of the data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium text-sm mb-2">Mean Values</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {Object.entries(analysisResult.statistics.means).map(([dim, value]: [string, any]) => (
+                        <div key={dim} className="bg-gray-50 p-3 rounded">
+                          <p className="text-xs text-gray-500">{dim}</p>
+                          <p className="text-lg font-semibold">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-sm mb-2">Median Values</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {Object.entries(analysisResult.statistics.medians).map(([dim, value]: [string, any]) => (
+                        <div key={dim} className="bg-gray-50 p-3 rounded">
+                          <p className="text-xs text-gray-500">{dim}</p>
+                          <p className="text-lg font-semibold">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-sm mb-2">Standard Deviations</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {Object.entries(analysisResult.statistics.stdDevs).map(([dim, value]: [string, any]) => (
+                        <div key={dim} className="bg-gray-50 p-3 rounded">
+                          <p className="text-xs text-gray-500">{dim}</p>
+                          <p className="text-lg font-semibold">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="border border-yellow-200 bg-yellow-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-sm mb-2 text-yellow-700">Weak Dimensions (Score &lt; 2.5)</h3>
+                      {analysisResult.statistics.weakDimensions.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                          {analysisResult.statistics.weakDimensions.map((dim: string) => (
+                            <li key={dim} className="text-sm">{dim}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">No weak dimensions identified</p>
+                      )}
+                    </div>
+                    
+                    <div className="border border-green-200 bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-sm mb-2 text-green-700">Strong Dimensions (Score &gt; 4.0)</h3>
+                      {analysisResult.statistics.strongDimensions.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                          {analysisResult.statistics.strongDimensions.map((dim: string) => (
+                            <li key={dim} className="text-sm">{dim}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">No strong dimensions identified</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
