@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { ChartBarIcon, Sparkles, PieChart } from 'lucide-react';
+import { ChartBarIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+
 interface EmptyStateProps {
   onUpload: () => void;
 }
+
 const EmptyState: React.FC<EmptyStateProps> = ({
   onUpload
 }) => {
@@ -18,15 +20,6 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         <p className="text-muted-foreground mb-6">
           Upload your Corporate Entrepreneurship Assessment Instrument (CEAI) survey data to analyze the five key dimensions and gain valuable insights.
         </p>
-        
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Link to="/ai-analysis" className="w-full">
-            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-              <Sparkles className="h-8 w-8 text-purple-600" />
-              <span>AI-Powered Analysis</span>
-            </Button>
-          </Link>
-        </div>
         
         <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -43,4 +36,5 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       </div>
     </div>;
 };
+
 export default EmptyState;
