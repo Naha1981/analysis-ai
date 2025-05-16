@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ChartBarIcon, Sparkles } from 'lucide-react';
+import { ChartBarIcon, Sparkles, UploadCloud, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 interface EmptyStateProps {
@@ -19,19 +20,31 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </p>
         
         <div className="flex flex-col space-y-2">
-          
-          
+          <Button onClick={onUpload} size="lg" className="w-full">
+            <UploadCloud className="mr-2 h-5 w-5" /> Upload CEAI Data
+          </Button>
         </div>
         
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Link to="/analysis" className="w-full">
+            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+              <PieChart className="h-8 w-8 text-purple-600" />
+              <span>Standard Analysis</span>
+            </Button>
+          </Link>
           
-          
+          <Link to="/ai-analysis" className="w-full">
+            <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+              <Sparkles className="h-8 w-8 text-purple-600" />
+              <span>AI-Powered Analysis</span>
+            </Button>
+          </Link>
         </div>
         
         <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="h-5 w-5 text-purple-600" />
-            <h3 className="font-medium"> AI-Powered Analysis</h3>
+            <h3 className="font-medium"> AI-Powered Analysis</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-3">Try the AI integration for advanced insights and detailed reports</p>
           <Link to="/ai-analysis">
