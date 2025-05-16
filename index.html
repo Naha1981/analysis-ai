@@ -15,27 +15,17 @@
             <div class="col-md-3 col-lg-2 sidebar">
                 <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-4 text-white min-vh-100">
                     <h2 class="fs-4 d-flex align-items-center mb-4">
-                        <i class="bi bi-bar-chart-line me-2"></i>
+                        <i class="bi bi-robot me-2"></i>
                         <span>CEAI Analysis</span>
                     </h2>
                     <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start w-100" id="menu">
                         <li class="nav-item w-100">
-                            <a href="#" class="nav-link active px-0 align-middle">
-                                <i class="bi bi-house"></i> <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                            <a href="#" class="nav-link active px-0 align-middle" id="ai-analysis-tab">
+                                <i class="bi bi-robot"></i> <span class="ms-1 d-none d-sm-inline">AI Analysis</span>
                             </a>
                         </li>
                         <li class="nav-item w-100">
-                            <a href="#" class="nav-link px-0 align-middle">
-                                <i class="bi bi-upload"></i> <span class="ms-1 d-none d-sm-inline">Upload Data</span>
-                            </a>
-                        </li>
-                        <li class="nav-item w-100">
-                            <a href="#" class="nav-link px-0 align-middle">
-                                <i class="bi bi-file-earmark-text"></i> <span class="ms-1 d-none d-sm-inline">Reports</span>
-                            </a>
-                        </li>
-                        <li class="nav-item w-100">
-                            <a href="#" class="nav-link px-0 align-middle">
+                            <a href="#" class="nav-link px-0 align-middle" id="settings-tab">
                                 <i class="bi bi-gear"></i> <span class="ms-1 d-none d-sm-inline">Settings</span>
                             </a>
                         </li>
@@ -46,169 +36,94 @@
             <!-- Main Content -->
             <div class="col-md-9 col-lg-10 main-content">
                 <div class="container py-4">
-                    <h1 class="mb-4">CEAI Analysis Dashboard</h1>
+                    <h1 class="mb-4">CEAI AI Analysis</h1>
                     
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Upload CEAI Survey Data</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="csvFile" class="form-label">Select CSV File</label>
-                                        <input class="form-control" type="file" id="csvFile" accept=".csv">
+                    <!-- AI Analysis Section -->
+                    <div id="aiAnalysisSection">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">AI Analysis</h5>
                                     </div>
-                                    <div class="d-flex justify-content-between">
-                                        <button id="uploadBtn" class="btn btn-primary">Process Data</button>
-                                        <button id="sampleDataBtn" class="btn btn-outline-secondary">Load Sample Data</button>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <p>Upload your CEAI survey data to get an in-depth AI analysis of your organization's entrepreneurial climate.</p>
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                Make sure your CSV file contains all 48 CEAI questions with Likert scale responses.
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="aiCsvFile" class="form-label">Select CSV File</label>
+                                            <input class="form-control" type="file" id="aiCsvFile" accept=".csv">
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <button id="analyzeBtn" class="btn btn-primary">
+                                                <i class="bi bi-robot me-2"></i>Analyze with AI
+                                            </button>
+                                            <button id="loadSampleAiBtn" class="btn btn-outline-secondary">Load Sample Data</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="aiResultsSection" class="d-none">
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="card-title mb-0">AI Analysis Results</h5>
+                                            <div>
+                                                <button id="exportAiBtn" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download me-1"></i>Export
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="aiAnalysisResults" class="ai-results">
+                                                <!-- AI analysis results will be displayed here -->
+                                                <div class="text-center p-5">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    <p class="mt-3">Analyzing your data...</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="resultsSection" class="d-none">
+                    <!-- Settings Section -->
+                    <div id="settingsSection" class="d-none">
                         <div class="row mb-4">
                             <div class="col-12">
                                 <div class="card">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h5 class="card-title mb-0">Analysis Results</h5>
-                                        <div>
-                                            <button id="exportBtn" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-download me-1"></i>Export
-                                            </button>
-                                        </div>
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Settings</h5>
                                     </div>
                                     <div class="card-body">
-                                        <ul class="nav nav-tabs" id="resultTabs" role="tablist">
-                                            <li class="nav-item" role="presentation">
-                                                <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">Summary</button>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <button class="nav-link" id="dimensions-tab" data-bs-toggle="tab" data-bs-target="#dimensions" type="button" role="tab">Dimensions</button>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab">Raw Data</button>
-                                            </li>
-                                        </ul>
-                                        <div class="tab-content p-3" id="resultTabsContent">
-                                            <!-- Summary Tab -->
-                                            <div class="tab-pane fade show active" id="summary" role="tabpanel">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="card mb-4">
-                                                            <div class="card-header">
-                                                                <h6 class="card-title mb-0">Average Scores</h6>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div id="averageScores"></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card mb-4">
-                                                            <div class="card-header">
-                                                                <h6 class="card-title mb-0">Strengths & Weaknesses</h6>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div id="strengthsWeaknesses"></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <h6 class="card-title mb-0">Interpretation</h6>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div id="interpretation">
-                                                                    <p>The organization demonstrates strong autonomy and moderate support for entrepreneurship. Work Discretion (Autonomy) stands out with an average score of 4.2, indicating employees feel empowered to make decisions. Areas such as Management Support and Rewards/Reinforcement show potential for improvement through clearer leadership engagement and incentive alignment. There are no weak dimensions, suggesting a generally supportive environment for innovation.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                        <!-- API key is now managed securely through the server -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Theme</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="themeOptions" id="lightTheme" checked>
+                                                <label class="form-check-label" for="lightTheme">
+                                                    Light
+                                                </label>
                                             </div>
-                                            
-                                            <!-- Dimensions Tab -->
-                                            <div class="tab-pane fade" id="dimensions" role="tabpanel">
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <div class="card mb-4">
-                                                            <div class="card-header">
-                                                                <h6 class="card-title mb-0">Dimension Scores Per Respondent</h6>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div class="table-responsive">
-                                                                    <table class="table table-striped" id="dimensionScoresTable">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Respondent</th>
-                                                                                <th>Management Support</th>
-                                                                                <th>Work Discretion</th>
-                                                                                <th>Rewards/Reinforcement</th>
-                                                                                <th>Time Availability</th>
-                                                                                <th>Organizational Boundaries</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody></tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <div class="card">
-                                                            <div class="card-header">
-                                                                <h6 class="card-title mb-0">Descriptive Statistics</h6>
-                                                            </div>
-                                                            <div class="card-body">
-                                                                <div class="table-responsive">
-                                                                    <table class="table table-striped" id="statisticsTable">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Dimension</th>
-                                                                                <th>Mean</th>
-                                                                                <th>Median</th>
-                                                                                <th>Std. Deviation</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody></tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Raw Data Tab -->
-                                            <div class="tab-pane fade" id="data" role="tabpanel">
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        <h6 class="card-title mb-0">Cleaned & Encoded Data</h6>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-striped" id="cleanedDataTable">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>Respondent</th>
-                                                                        <!-- Question headers will be added dynamically -->
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody></tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="themeOptions" id="darkTheme">
+                                                <label class="form-check-label" for="darkTheme">
+                                                    Dark
+                                                </label>
                                             </div>
                                         </div>
+                                        <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
                                     </div>
                                 </div>
                             </div>
