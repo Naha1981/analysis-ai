@@ -25,9 +25,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         </div>
         
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Link to="/analysis" className="w-full">
-            
-          </Link>
+          
           
           <Link to="/ai-analysis" className="w-full">
             <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
