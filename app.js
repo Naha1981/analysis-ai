@@ -1,63 +1,174 @@
 document.addEventListener('DOMContentLoaded', function() {
     // DOM elements
-    const csvFileInput = document.getElementById('csvFile');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const sampleDataBtn = document.getElementById('sampleDataBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const resultsSection = document.getElementById('resultsSection');
+    const aiCsvFileInput = document.getElementById('aiCsvFile');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loadSampleAiBtn = document.getElementById('loadSampleAiBtn');
+    const exportAiBtn = document.getElementById('exportAiBtn');
+    const aiResultsSection = document.getElementById('aiResultsSection');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    
+    // Navigation tabs
+    const aiAnalysisTab = document.getElementById('ai-analysis-tab');
+    const settingsTab = document.getElementById('settings-tab');
+    
+    // Content sections
+    const aiAnalysisSection = document.getElementById('aiAnalysisSection');
+    const settingsSection = document.getElementById('settingsSection');
     
     // Event listeners
-    uploadBtn.addEventListener('click', processUploadedFile);
-    sampleDataBtn.addEventListener('click', loadSampleData);
-    exportBtn.addEventListener('click', exportResults);
+    analyzeBtn.addEventListener('click', processWithAI);
+    loadSampleAiBtn.addEventListener('click', loadSampleAIAnalysis);
+    exportAiBtn.addEventListener('click', exportAIResults);
+    saveSettingsBtn.addEventListener('click', saveSettings);
+    
+    // Tab navigation
+    aiAnalysisTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('ai-analysis');
+    });
+    
+    settingsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('settings');
+    });
     
     // Current results data
-    let currentResults = null;
+    let currentAIResults = null;
     
-    // Process the uploaded CSV file
-    function processUploadedFile() {
-        const file = csvFileInput.files[0];
+    // Load saved API key if available
+    loadSavedSettings();
+    
+    // Show the appropriate section based on tab
+    function showSection(section) {
+        // Reset active state
+        [aiAnalysisTab, settingsTab].forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Hide all sections
+        aiAnalysisSection.classList.add('d-none');
+        settingsSection.classList.add('d-none');
+        
+        // Show selected section
+        switch(section) {
+            case 'ai-analysis':
+                aiAnalysisTab.classList.add('active');
+                aiAnalysisSection.classList.remove('d-none');
+                break;
+            case 'settings':
+                settingsTab.classList.add('active');
+                settingsSection.classList.remove('d-none');
+                break;
+        }
+    }
+    
+    // Process CSV with AI
+    async function processWithAI() {
+        const file = aiCsvFileInput.files[0];
         if (!file) {
-            alert('Please select a CSV file first.');
+            showMessage('Please select a CSV file first', 'error');
+            return;
+        }
+
+        showMessage('Processing with AI...', 'info');
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+        // Display loading indicator
+        aiResultsSection.classList.remove('d-none');
+        const resultsContainer = document.getElementById('aiAnalysisResults');
+        resultsContainer.innerHTML = `
+            <div class="text-center my-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Analyzing your data with AI...</p>
+            </div>
+        `;
+
+        try {
+            // Read the file as text
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const csvData = e.target.result;
+                    
+                    // Call the API
+                    const response = await fetch('/api/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ csvData }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    displayAIResults(result.analysis);
+                    currentAIResults = result.analysis;
+                    
+                    showMessage('AI analysis complete!', 'success');
+                } catch (error) {
+                    console.error('Error processing with AI:', error);
+                    resultsContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4 class="alert-heading">Analysis Error</h4>
+                            <p>${error.message}</p>
+                            <hr>
+                            <p class="mb-0">Please try again or contact support if the problem persists.</p>
+                        </div>
+                    `;
+                    showMessage('Error processing with AI: ' + error.message, 'error');
+                } finally {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = 'Analyze with AI';
+                }
+            };
+            
+            reader.onerror = function() {
+                resultsContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Error reading file.
+                    </div>
+                `;
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = 'Analyze with AI';
+                showMessage('Error reading file', 'error');
+            };
+            
+            reader.readAsText(file);
+        } catch (error) {
+            console.error('Error initiating file read:', error);
+            showMessage('Error: ' + error.message, 'error');
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = 'Analyze with AI';
+        }
+    }
+    
+    // Load sample AI analysis
+    function loadSampleAIAnalysis() {
+        aiResultsSection.classList.remove('d-none');
+        const analysis = generateSampleGeminiAnalysis();
+        displayAIResults(analysis);
+        currentAIResults = analysis;
+    }
+    
+    // This section has been removed as we're focusing only on AI analysis
+    
+    // Export AI results as text
+    function exportAIResults() {
+        if (!currentAIResults) {
+            alert('No AI analysis to export.');
             return;
         }
         
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const csvData = e.target.result;
-                const results = processCEAIData(csvData);
-                displayResults(results);
-                currentResults = results;
-            } catch (error) {
-                alert('Error processing file: ' + error.message);
-                console.error(error);
-            }
-        };
-        reader.onerror = function() {
-            alert('Error reading file.');
-        };
-        reader.readAsText(file);
-    }
-    
-    // Load sample data for demonstration
-    function loadSampleData() {
-        const results = generateSampleData();
-        displayResults(results);
-        currentResults = results;
-    }
-    
-    // Export results as JSON
-    function exportResults() {
-        if (!currentResults) {
-            alert('No data to export.');
-            return;
-        }
+        const dataUri = 'data:text/plain;charset=utf-8,'+ encodeURIComponent(currentAIResults);
         
-        const dataStr = JSON.stringify(currentResults, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = 'ceai_analysis_results.json';
+        const exportFileDefaultName = 'ceai_ai_analysis.txt';
         
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
@@ -65,294 +176,122 @@ document.addEventListener('DOMContentLoaded', function() {
         linkElement.click();
     }
     
-    // Display results in the UI
-    function displayResults(results) {
-        // Show results section
-        resultsSection.classList.remove('d-none');
+    // Save user settings
+    function saveSettings() {
+        const theme = document.getElementById('darkTheme').checked ? 'dark' : 'light';
         
-        // Display average scores
-        displayAverageScores(results.statistics.means);
+        // Save to local storage
+        localStorage.setItem('ceaiTheme', theme);
         
-        // Display strengths and weaknesses
-        displayStrengthsWeaknesses(results.statistics.strong_dimensions, results.statistics.weak_dimensions);
+        // Apply theme
+        applyTheme(theme);
         
-        // Populate dimension scores table
-        populateDimensionScoresTable(results.dimension_scores);
-        
-        // Populate statistics table
-        populateStatisticsTable(results.statistics);
-        
-        // Populate cleaned data table
-        populateCleanedDataTable(results.cleaned_data);
-        
-        // Generate interpretation (this would be replaced by Gemini API call in a real implementation)
-        generateInterpretation(results);
+        alert('Settings saved successfully!');
     }
     
-    // Display average scores with visual indicators
-    function displayAverageScores(means) {
-        const container = document.getElementById('averageScores');
-        container.innerHTML = '';
+    // Load saved settings
+    function loadSavedSettings() {
+        const savedTheme = localStorage.getItem('ceaiTheme') || 'light';
         
-        for (const dimension in means) {
-            const score = means[dimension];
-            const scoreClass = getScoreClass(score);
-            
-            const scoreItem = document.createElement('div');
-            scoreItem.className = 'score-indicator';
-            scoreItem.innerHTML = `
-                <div class="score-label">${dimension}</div>
-                <div class="score-bar">
-                    <div class="score-fill ${scoreClass}" style="width: ${score * 20}%;"></div>
+        if (savedTheme === 'dark') {
+            document.getElementById('darkTheme').checked = true;
+        } else {
+            document.getElementById('lightTheme').checked = true;
+        }
+        
+        // Apply theme
+        applyTheme(savedTheme);
+    }
+    
+    // Apply theme
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+    }
+    
+    // Display notifications to the user
+    function showMessage(message, type = 'info') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary'}`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        // Create toast content
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
                 </div>
-                <div class="score-value">${score.toFixed(2)}</div>
-            `;
-            
-            container.appendChild(scoreItem);
-        }
-    }
-    
-    // Display strengths and weaknesses
-    function displayStrengthsWeaknesses(strongDimensions, weakDimensions) {
-        const container = document.getElementById('strengthsWeaknesses');
-        container.innerHTML = '';
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
         
-        // Add strengths
-        if (strongDimensions.length > 0) {
-            const strengthsHeading = document.createElement('h6');
-            strengthsHeading.textContent = 'Strong Dimensions (> 4.0)';
-            container.appendChild(strengthsHeading);
-            
-            strongDimensions.forEach(dimension => {
-                const item = document.createElement('div');
-                item.className = 'strength-item';
-                item.innerHTML = `<i class="bi bi-star-fill"></i> ${dimension}`;
-                container.appendChild(item);
-            });
-        } else {
-            const noStrengths = document.createElement('p');
-            noStrengths.innerHTML = '<i>No strong dimensions identified.</i>';
-            container.appendChild(noStrengths);
-        }
+        // Add toast to container
+        toastContainer.appendChild(toast);
         
-        // Add weaknesses
-        if (weakDimensions.length > 0) {
-            const weaknessesHeading = document.createElement('h6');
-            weaknessesHeading.className = 'mt-3';
-            weaknessesHeading.textContent = 'Weak Dimensions (< 2.5)';
-            container.appendChild(weaknessesHeading);
-            
-            weakDimensions.forEach(dimension => {
-                const item = document.createElement('div');
-                item.className = 'weakness-item';
-                item.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${dimension}`;
-                container.appendChild(item);
-            });
-        } else {
-            const noWeaknesses = document.createElement('p');
-            noWeaknesses.className = 'mt-3';
-            noWeaknesses.innerHTML = '<i>No weak dimensions identified.</i>';
-            container.appendChild(noWeaknesses);
-        }
-    }
-    
-    // Populate dimension scores table
-    function populateDimensionScoresTable(dimensionScores) {
-        const tableBody = document.querySelector('#dimensionScoresTable tbody');
-        tableBody.innerHTML = '';
+        // Initialize and show toast
+        const bsToast = new bootstrap.Toast(toast, { delay: 5000 });
+        bsToast.show();
         
-        dimensionScores.forEach((scoreRow, index) => {
-            const row = document.createElement('tr');
-            
-            // Respondent number
-            const respondentCell = document.createElement('td');
-            respondentCell.textContent = `Respondent ${index + 1}`;
-            row.appendChild(respondentCell);
-            
-            // Dimension scores
-            const dimensions = [
-                'Management Support', 
-                'Work Discretion (Autonomy)', 
-                'Rewards/Reinforcement', 
-                'Time Availability', 
-                'Organizational Boundaries'
-            ];
-            
-            dimensions.forEach(dimension => {
-                const cell = document.createElement('td');
-                const score = scoreRow[dimension];
-                cell.textContent = score.toFixed(2);
-                
-                // Add color coding
-                if (score > 4.0) {
-                    cell.classList.add('table-success');
-                } else if (score < 2.5) {
-                    cell.classList.add('table-danger');
-                }
-                
-                row.appendChild(cell);
-            });
-            
-            tableBody.appendChild(row);
+        // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', function() {
+            toast.remove();
         });
     }
     
-    // Populate statistics table
-    function populateStatisticsTable(statistics) {
-        const tableBody = document.querySelector('#statisticsTable tbody');
-        tableBody.innerHTML = '';
+    // Display AI analysis results
+    function displayAIResults(analysis) {
+        const resultsContainer = document.getElementById('aiAnalysisResults');
         
-        const dimensions = Object.keys(statistics.means);
+        // Convert markdown to HTML (simple implementation)
+        let html = analysis
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+            .replace(/^\* (.*$)/gm, '<li>$1</li>')
+            .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+            .replace(/<\/li>\n<li>/g, '</li><li>')
+            .replace(/<\/li>\n/g, '</li></ul>\n')
+            .replace(/\n<li>/g, '\n<ul><li>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n\n/g, '<br><br>');
         
-        dimensions.forEach(dimension => {
-            const row = document.createElement('tr');
-            
-            // Dimension name
-            const nameCell = document.createElement('td');
-            nameCell.textContent = dimension;
-            row.appendChild(nameCell);
-            
-            // Mean
-            const meanCell = document.createElement('td');
-            const meanValue = statistics.means[dimension];
-            meanCell.textContent = meanValue.toFixed(2);
-            if (meanValue > 4.0) {
-                meanCell.classList.add('table-success');
-            } else if (meanValue < 2.5) {
-                meanCell.classList.add('table-danger');
-            }
-            row.appendChild(meanCell);
-            
-            // Median
-            const medianCell = document.createElement('td');
-            medianCell.textContent = statistics.medians[dimension].toFixed(2);
-            row.appendChild(medianCell);
-            
-            // Standard Deviation
-            const stdDevCell = document.createElement('td');
-            stdDevCell.textContent = statistics.std_devs[dimension].toFixed(2);
-            row.appendChild(stdDevCell);
-            
-            tableBody.appendChild(row);
-        });
+        resultsContainer.innerHTML = html;
     }
     
-    // Populate cleaned data table
-    function populateCleanedDataTable(cleanedData) {
-        const table = document.getElementById('cleanedDataTable');
-        const thead = table.querySelector('thead tr');
-        const tbody = table.querySelector('tbody');
-        
-        // Clear existing content
-        while (thead.children.length > 1) {
-            thead.removeChild(thead.lastChild);
-        }
-        tbody.innerHTML = '';
-        
-        // Add question headers
-        for (let i = 0; i < cleanedData[0].length; i++) {
-            const th = document.createElement('th');
-            th.textContent = `Q${i + 1}`;
-            thead.appendChild(th);
-        }
-        
-        // Add data rows
-        cleanedData.forEach((row, rowIndex) => {
-            const tr = document.createElement('tr');
-            
-            // Add respondent number
-            const respondentCell = document.createElement('td');
-            respondentCell.textContent = `Respondent ${rowIndex + 1}`;
-            tr.appendChild(respondentCell);
-            
-            // Add data cells
-            row.forEach(value => {
-                const td = document.createElement('td');
-                td.textContent = value;
-                tr.appendChild(td);
-            });
-            
-            tbody.appendChild(tr);
-        });
-    }
+    // Show empty initial state with instructions
+    showEmptyState();
     
-    // Generate interpretation text (would be replaced by Gemini API in a real implementation)
-    function generateInterpretation(results) {
-        const interpretationDiv = document.getElementById('interpretation');
-        const means = results.statistics.means;
-        const strongDimensions = results.statistics.strong_dimensions;
-        const weakDimensions = results.statistics.weak_dimensions;
-        
-        let interpretationText = '';
-        
-        // General assessment
-        const avgOfMeans = Object.values(means).reduce((sum, val) => sum + val, 0) / Object.values(means).length;
-        
-        if (avgOfMeans > 4.0) {
-            interpretationText += 'The organization demonstrates a highly supportive environment for corporate entrepreneurship. ';
-        } else if (avgOfMeans > 3.5) {
-            interpretationText += 'The organization demonstrates a moderately supportive environment for corporate entrepreneurship. ';
-        } else if (avgOfMeans > 2.5) {
-            interpretationText += 'The organization demonstrates some support for corporate entrepreneurship, but has significant room for improvement. ';
-        } else {
-            interpretationText += 'The organization demonstrates limited support for corporate entrepreneurship. ';
-        }
-        
-        // Strong dimensions
-        if (strongDimensions.length > 0) {
-            interpretationText += strongDimensions.length === 1 
-                ? `${strongDimensions[0]} stands out with an average score of ${means[strongDimensions[0]].toFixed(2)}, indicating ` 
-                : 'The following dimensions stand out as organizational strengths: ';
-                
-            if (strongDimensions.includes('Management Support')) {
-                interpretationText += 'management actively encourages and champions innovative initiatives. ';
-            }
-            if (strongDimensions.includes('Work Discretion (Autonomy)')) {
-                interpretationText += 'employees feel empowered to make decisions and have freedom to determine how to do their work. ';
-            }
-            if (strongDimensions.includes('Rewards/Reinforcement')) {
-                interpretationText += 'the organization effectively recognizes and rewards entrepreneurial behavior. ';
-            }
-            if (strongDimensions.includes('Time Availability')) {
-                interpretationText += 'employees have sufficient time to pursue innovative ideas alongside their regular responsibilities. ';
-            }
-            if (strongDimensions.includes('Organizational Boundaries')) {
-                interpretationText += 'the organization has flexible boundaries that promote resource sharing and collaboration. ';
-            }
-        }
-        
-        // Weak dimensions
-        if (weakDimensions.length > 0) {
-            interpretationText += 'Areas requiring significant improvement include: ';
-            
-            weakDimensions.forEach((dim, i) => {
-                interpretationText += `${dim} (${means[dim].toFixed(2)})`;
-                if (i < weakDimensions.length - 1) interpretationText += ', ';
-                else interpretationText += '. ';
-            });
-            
-            interpretationText += 'These low scores suggest barriers to entrepreneurial activity that should be addressed. ';
-        } else {
-            // Suggest improvements for lowest dimension if no weak dimensions
-            const lowestDim = Object.keys(means).reduce((a, b) => means[a] < means[b] ? a : b);
-            
-            interpretationText += `While there are no critically weak dimensions, ${lowestDim} shows the most room for improvement with a score of ${means[lowestDim].toFixed(2)}. `;
-        }
-        
-        // Conclusion
-        interpretationText += 'To enhance corporate entrepreneurship, the organization should focus on strengthening the lower-scoring dimensions while maintaining its current strengths.';
-        
-        interpretationDiv.innerHTML = `<p>${interpretationText}</p>`;
+    // Function to show empty initial state
+    function showEmptyState() {
+        aiResultsSection.classList.remove('d-none');
+        const resultsContainer = document.getElementById('aiAnalysisResults');
+        resultsContainer.innerHTML = `
+            <div class="text-center my-5 p-5 bg-light rounded">
+                <i class="bi bi-upload fs-1 text-primary mb-3"></i>
+                <h4>Welcome to CEAI Analysis</h4>
+                <p class="text-muted">Upload a CSV file and click "Analyze with AI" to generate insights from your CEAI survey data.</p>
+                <p><small>Or use the "Load Sample AI Analysis" button to see an example analysis.</small></p>
+            </div>
+        `;
     }
-    
-    // Helper function to get score class for visual indicators
-    function getScoreClass(score) {
-        if (score > 4.0) return 'high';
-        if (score >= 3.0) return 'medium';
-        if (score >= 2.5) return 'low';
-        return 'very-low';
-    }
-    
-    // Initialize with sample data
-    loadSampleData();
 });
