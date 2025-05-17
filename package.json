@@ -1,7 +1,7 @@
 {
   "name": "ceai-analysis",
   "version": "1.0.0",
-  "description": "CEAI Survey Analysis Tool with Gemini API Integration",
+  "description": "CEAI Survey Analysis Tool with Gemini AI Integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
