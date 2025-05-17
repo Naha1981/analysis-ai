@@ -54,12 +54,10 @@ function cleanAndEncode(value) {
 // 🔹 Replace NaNs with column mean
 function replaceNaNWithColumnMean(data) {
     const colMeans = [];
-    // Calculate mean per column
     for (let c = 0; c < data[0].length; c++) {
         const colValues = data.map(row => row[c]).filter(n => !isNaN(n));
         colMeans[c] = mean(colValues);
     }
-    // Replace NaNs
     return data.map(row =>
         row.map((val, idx) => (isNaN(val) ? colMeans[idx] : val))
     );
@@ -68,17 +66,13 @@ function replaceNaNWithColumnMean(data) {
 // 🔹 Main Processing Function
 function processCEAIData(csvData) {
     const rows = csvData.trim().split("\n").map(line => line.split(","));
-    // Validate input
     if (rows.length < 2) {
         throw new Error("CSV must contain at least a header row and one data row.");
     }
-    // Skip header if present
     const dataRows = rows.slice(1);
-    // Clean and encode data
     let encodedData = dataRows.map(row => row.map(cleanAndEncode));
-    // Replace invalid values with column means
     encodedData = replaceNaNWithColumnMean(encodedData);
-    // Compute dimension scores per respondent
+
     const dimensionScores = encodedData.map(row => {
         const scoreRow = {};
         for (let dim in ceaiDimensions) {
@@ -88,7 +82,7 @@ function processCEAIData(csvData) {
         }
         return scoreRow;
     });
-    // Compute overall statistics
+
     const stats = {
         means: {},
         medians: {},
@@ -96,6 +90,7 @@ function processCEAIData(csvData) {
     };
     const weakDimensions = [];
     const strongDimensions = [];
+
     for (let dim in ceaiDimensions) {
         const values = dimensionScores.map(r => r[dim]);
         const avg = Number(mean(values).toFixed(2));
@@ -107,10 +102,10 @@ function processCEAIData(csvData) {
         if (avg < 2.5) weakDimensions.push(dim);
         if (avg > 4.0) strongDimensions.push(dim);
     }
-    // Add weak and strong dimensions to stats
+
     stats.weak_dimensions = weakDimensions;
     stats.strong_dimensions = strongDimensions;
-    // Return final output structure
+
     return {
         cleaned_data: encodedData.map(row => row.map(n => Number(n.toFixed(2)))),
         dimension_scores: dimensionScores,
@@ -118,23 +113,18 @@ function processCEAIData(csvData) {
     };
 }
 
-// 🔹 Calculate Cronbach's Alpha for reliability analysis
+// 🔹 Calculate Cronbach's Alpha
 function calculateCronbachAlpha(data, dimensionIndices) {
-    // Extract the items for this dimension
     const items = dimensionIndices.map(idx => data.map(row => row[idx]));
-    // Calculate item variances
     const itemVariances = items.map(item => {
         const itemMean = mean(item);
         return mean(item.map(val => Math.pow(val - itemMean, 2)));
     });
-    // Calculate total scores for each respondent
-    const totalScores = data.map((_, rowIdx) => 
+    const totalScores = data.map((_, rowIdx) =>
         dimensionIndices.reduce((sum, colIdx) => sum + data[rowIdx][colIdx], 0)
     );
-    // Calculate variance of total scores
     const totalMean = mean(totalScores);
     const totalVariance = mean(totalScores.map(score => Math.pow(score - totalMean, 2)));
-    // Calculate Cronbach's Alpha
     const k = dimensionIndices.length;
     const sumOfItemVariances = itemVariances.reduce((sum, variance) => sum + variance, 0);
     const alpha = (k / (k - 1)) * (1 - (sumOfItemVariances / totalVariance));
@@ -144,17 +134,13 @@ function calculateCronbachAlpha(data, dimensionIndices) {
 // 🔹 Prepare data for AI analysis
 function prepareDataForGeminiAnalysis(csvData) {
     try {
-        // Process the CSV data to get the actual scores and analysis
         const processedData = processCEAIData(csvData);
-        // Convert CSV to a format suitable for the API
         const rows = csvData.trim().split("\n");
         const headers = rows[0].split(",");
-        // Create a formatted string with questions as headers and responses
         let formattedData = headers.join("\t") + "\n";
         for (let i = 1; i < rows.length; i++) {
             formattedData += rows[i].split(",").join("\t") + "\n";
         }
-        // Add the processed data as context for better analysis
         formattedData += "\nPROCESSED_DATA_CONTEXT:\n";
         formattedData += JSON.stringify({
             dimension_scores: processedData.dimension_scores,
@@ -163,82 +149,68 @@ function prepareDataForGeminiAnalysis(csvData) {
         return formattedData;
     } catch (error) {
         console.error('Error preparing data for analysis:', error);
-        // Return the original CSV data if processing fails
         return csvData;
     }
 }
 
-// Generate sample AI analysis based on actual data
+// 🔹 Generate sample AI analysis based on actual data
 function generateSampleGeminiAnalysis(processedData) {
-    // If no data is provided, return the default analysis
     if (!processedData) {
         return getDefaultAnalysis();
     }
 
-    try {
-        // Extract statistics from the processed data
-        const stats = processedData.statistics;
-        const means = stats.means;
-        const strongDimensions = stats.strong_dimensions || [];
-        const weakDimensions = stats.weak_dimensions || [];
+    const stats = processedData.statistics;
+    const means = stats.means;
+    const strongDimensions = stats.strong_dimensions || [];
+    const weakDimensions = stats.weak_dimensions || [];
 
-        // Calculate overall average
-        const dimensionValues = Object.values(means);
-        const overallAvg = dimensionValues.reduce((sum, val) => sum + val, 0) / dimensionValues.length;
+    const dimensionValues = Object.values(means);
+    const overallAvg = dimensionValues.reduce((sum, val) => sum + val, 0) / dimensionValues.length;
 
-        // Determine overall assessment based on average score
-        let overallAssessment;
-        if (overallAvg > 4.0) {
-            overallAssessment = "highly supportive environment for entrepreneurship";
-        } else if (overallAvg > 3.5) {
-            overallAssessment = "moderately supportive environment for entrepreneurship";
-        } else if (overallAvg > 2.5) {
-            overallAssessment = "somewhat supportive environment for entrepreneurship with significant room for improvement";
-        } else {
-            overallAssessment = "challenging environment for entrepreneurship that requires substantial improvement";
-        }
+    let overallAssessment;
+    if (overallAvg > 4.0) {
+        overallAssessment = "highly supportive environment for entrepreneurship";
+    } else if (overallAvg > 3.5) {
+        overallAssessment = "moderately supportive environment for entrepreneurship";
+    } else if (overallAvg > 2.5) {
+        overallAssessment = "somewhat supportive environment for entrepreneurship with significant room for improvement";
+    } else {
+        overallAssessment = "challenging environment for entrepreneurship that requires substantial improvement";
+    }
 
-        // Sort dimensions by score (highest to lowest)
-        const sortedDimensions = Object.entries(means)
-            .sort((a, b) => b[1] - a[1])
-            .map(([name, score]) => ({ name, score }));
+    const sortedDimensions = Object.entries(means)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, score]) => ({ name, score }));
 
-        // Generate dimension averages section
-        let dimensionAverages = sortedDimensions.map(dim => {
-            const star = dim.score > 4.0 ? " ⭐ (Strong)" : "";
-            const warning = dim.score < 2.5 ? " ⚠️ (Weak)" : "";
-            return `* **${dim.name}**: ${dim.score.toFixed(2)}${star}${warning}`;
+    let dimensionAverages = sortedDimensions.map(dim => {
+        const star = dim.score > 4.0 ? " ⭐ (Strong)" : "";
+        const warning = dim.score < 2.5 ? " ⚠️ (Weak)" : "";
+        return `* **${dim.name}**: ${dim.score.toFixed(2)}${star}${warning}`;
+    }).join("\n");
+
+    let strengthsSection = "";
+    if (strongDimensions.length > 0) {
+        strengthsSection = strongDimensions.map(dim => {
+            return `* **${dim}** stands out as a strength with a score of ${means[dim].toFixed(2)}`;
         }).join("\n");
+    } else {
+        const topDim = sortedDimensions[0];
+        strengthsSection = `* **${topDim.name}** is the highest scoring dimension at ${topDim.score.toFixed(2)}, though it doesn't reach the threshold for a strong dimension (>4.0)`;
+    }
 
-        // Generate strengths section
-        let strengthsSection = "";
-        if (strongDimensions.length > 0) {
-            strengthsSection = strongDimensions.map(dim => {
-                return `* **${dim}** stands out as a strength with a score of ${means[dim].toFixed(2)}`;
-            }).join("\n");
-        } else {
-            // If no strong dimensions, highlight the highest scoring dimension
-            const topDim = sortedDimensions[0];
-            strengthsSection = `* **${topDim.name}** is the highest scoring dimension at ${topDim.score.toFixed(2)}, though it doesn't reach the threshold for a strong dimension (>4.0)`;
-        }
+    let weaknessesSection = "";
+    if (weakDimensions.length > 0) {
+        weaknessesSection = weakDimensions.map(dim => {
+            return `* **${dim}** is a critical area for improvement with a low score of ${means[dim].toFixed(2)}`;
+        }).join("\n");
+    } else {
+        const bottomDim = sortedDimensions[sortedDimensions.length - 1];
+        weaknessesSection = `* **${bottomDim.name}** is the lowest scoring dimension at ${bottomDim.score.toFixed(2)}, though it doesn't fall below the threshold for a weak dimension (<2.5)`;
+    }
 
-        // Generate weaknesses section
-        let weaknessesSection = "";
-        if (weakDimensions.length > 0) {
-            weaknessesSection = weakDimensions.map(dim => {
-                return `* **${dim}** is a critical area for improvement with a low score of ${means[dim].toFixed(2)}`;
-            }).join("\n");
-        } else {
-            // If no weak dimensions, highlight the lowest scoring dimension
-            const bottomDim = sortedDimensions[sortedDimensions.length - 1];
-            weaknessesSection = `* **${bottomDim.name}** is the lowest scoring dimension at ${bottomDim.score.toFixed(2)}, though it doesn't fall below the threshold for a weak dimension (<2.5)`;
-        }
+    const recommendations = generateRecommendations(sortedDimensions, strongDimensions, weakDimensions);
 
-        // Generate recommendations based on the actual data
-        let recommendations = generateRecommendations(sortedDimensions, strongDimensions, weakDimensions);
-
-        // Create the full analysis report
-        return `# CEAI Survey Analysis Report
+    return `# CEAI Survey Analysis Report
 ## Executive Summary
 The Corporate Entrepreneurship Assessment Instrument (CEAI) survey results indicate a **${overallAssessment}**. ${strongDimensions.length > 0 ? `Notable strengths include ${strongDimensions.join(', ')}.` : ''} ${weakDimensions.length > 0 ? `Areas requiring immediate attention include ${weakDimensions.join(', ')}.` : ''}
 ## Overall Dimension Averages
@@ -260,10 +232,24 @@ ${weaknessesSection}
 ${recommendations}
 ## Conclusion
 The organization demonstrates ${overallAvg > 3.5 ? 'a supportive' : 'an evolving'} environment for corporate entrepreneurship. ${overallAvg > 3.5 ? 'By maintaining strengths and addressing areas for improvement' : 'By focusing on the identified areas for improvement'}, the organization can enhance its entrepreneurial climate and potentially see increased innovation and initiative from employees.`;
-    } catch (error) {
-        console.error('Error generating analysis:', error);
-        return getDefaultAnalysis();
-    }
+}
+
+// Simplified recommendations for clarity
+function generateRecommendations(sortedDimensions, strongDimensions, weakDimensions) {
+    return `1. **Enhance Organizational Flexibility**
+   * Review standard procedures
+   * Encourage cross-department collaboration
+   * Reduce red tape
+
+2. **Improve Time Management**
+   * Evaluate workload balance
+   * Allocate innovation time
+   * Minimize distractions
+
+3. **Strengthen Management Support**
+   * Provide innovation leadership training
+   * Create idea feedback channels
+   * Celebrate creative efforts`;
 }
 
 // Default analysis for fallback
@@ -315,27 +301,19 @@ All dimensions demonstrate acceptable to good reliability, indicating consistent
 The organization demonstrates a moderately supportive environment for corporate entrepreneurship with a particular strength in employee autonomy. By addressing the identified areas for improvement, particularly organizational boundaries and time availability, the organization can further enhance its entrepreneurial climate and potentially see increased innovation and initiative from employees.`;
 }
 
-// Generate recommendations based on dimension scores
-function generateRecommendations(sortedDimensions, strongDimensions, weakDimensions) {
-    let recommendations = [];
-    // Get the bottom 3 dimensions (or fewer if there are less than 3)
-    const bottomDimensions = sortedDimensions.slice(-Math.min(3, sortedDimensions.length));
-    // Add recommendations for each bottom dimension
-    bottomDimensions.forEach(dim => {
-        let rec = {};
-        switch(dim.name) {
-            case 'Management Support':
-                rec = {
-                    title: "Strengthen Management Support",
-                    bullets: [
-                        "Provide leadership training focused on supporting entrepreneurial initiatives",
-                        "Establish clear channels for idea submission and feedback",
-                        "Recognize and celebrate innovative efforts, even when they don't succeed"
-                    ]
-                };
-                break;
-            case 'Work Discretion (Autonomy)':
-                rec = {
-                    title: "Enhance Employee Autonomy",
-                    bullets: [
-                        "Empower employees to make more decisions without excessive
+// Make functions available for both browser and Node.js environments
+if (typeof window !== 'undefined') {
+    window.processCEAIData = processCEAIData;
+    window.generateSampleData = generateSampleData;
+    window.calculateCronbachAlpha = calculateCronbachAlpha;
+    window.prepareDataForGeminiAnalysis = prepareDataForGeminiAnalysis;
+    window.generateSampleGeminiAnalysis = generateSampleGeminiAnalysis;
+} else if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        processCEAIData,
+        generateSampleData,
+        calculateCronbachAlpha,
+        prepareDataForGeminiAnalysis,
+        generateSampleGeminiAnalysis
+    };
+}
